@@ -177,8 +177,10 @@
             <select id="tx-wallet" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
               <option value="BCA">Bank BCA</option>
               <option value="Mandiri">Bank Mandiri</option>
+              <option value="BNI">Bank BNI</option>
               <option value="OVO">OVO</option>
               <option value="Gopay">Gopay</option>
+              <option value="DANA">DANA</option>
               <option value="Cash">Cash / Tunai</option>
             </select>
           </div>
@@ -263,17 +265,17 @@
     // State Database Lokal (Simulasi)
     let state = {
       transactions: [
-        { id: 1, type: 'expense', amount: 35000, category: 'Makanan & Minuman', wallet: 'BCA', desc: 'Makan Siang Nasi Padang', date: '2026-10-14', method: 'voice' },
-        { id: 2, type: 'expense', amount: 120000, category: 'Belanja', wallet: 'OVO', desc: 'Struk Indomaret', date: '2026-10-13', method: 'ocr' },
-        { id: 3, type: 'income', amount: 8000000, category: 'Gaji', wallet: 'BCA', desc: 'Gaji Bulanan', date: '2026-10-01', method: 'manual' }
+        { id: 1, type: 'expense', amount: 0, category: 'Makanan & Minuman', wallet: 'BCA', desc: 'Makan Siang Nasi Padang', date: '2026-10-14', method: 'voice' },
+        { id: 2, type: 'expense', amount: 0, category: 'Belanja', wallet: 'OVO', desc: 'Struk Indomaret', date: '2026-10-13', method: 'ocr' },
+        { id: 3, type: 'income', amount: 0, category: 'Gaji', wallet: 'BCA', desc: 'Gaji Bulanan', date: '2026-10-01', method: 'manual' }
       ],
       assets: [
-        { id: 1, name: 'Emas Antam (10 gr)', value: 15000000 },
-        { id: 2, name: 'Saham BBCA', value: 20000000 }
+        { id: 1, name: 'Emas Antam (10 gr)', value: 0 },
+        { id: 2, name: 'Saham BBCA', value: 0 }
       ],
       debts: [
-        { id: 1, type: 'receivable', person: 'Budi (Teman)', amount: 300000, settled: false },
-        { id: 2, type: 'debt', person: 'Cicilan KPR Bank', amount: 5000000, settled: false }
+        { id: 1, type: 'receivable', person: 'Budi (Teman)', amount: 0, settled: false },
+        { id: 2, type: 'debt', person: 'Cicilan KPR Bank', amount: 0, settled: false }
       ],
       currentFormType: 'expense'
     };
@@ -504,8 +506,8 @@
         data: {
           labels: ['Agu', 'Sep', 'Okt'],
           datasets: [
-            { label: 'Pemasukan', data: [6000000, 6500000, 8000000], backgroundColor: '#10b981' },
-            { label: 'Pengeluaran', data: [3200000, 3800000, 2155000], backgroundColor: '#f43f5e' }
+            { label: 'Pemasukan', data: [0, 0, 0], backgroundColor: '#10b981' },
+            { label: 'Pengeluaran', data: [0, 0, 0], backgroundColor: '#f43f5e' }
           ]
         },
         options: {
