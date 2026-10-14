@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keuangan Otomatis Guntur</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen pb-12">
+
+  <div class="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+
+    <!-- Header Navigation -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-wallet text-blue-500"></i> Keuangan Guntur
+        </h1>
+        <p class="text-slate-400 text-xs md:text-sm mt-0.5">Pencatatan Otomatis Suara, Teks, Struk, Aset & Hutang</p>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex bg-slate-800 p-1 rounded-xl border border-slate-700 w-full md:w-auto overflow-x-auto text-xs md:text-sm">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex-1 md:flex-initial px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 text-white">
+          <i class="fa-solid fa-chart-pie mr-1"></i> Dashboard
+        </button>
+        <button onclick="switchTab('transactions')" id="tab-transactions" class="flex-1 md:flex-initial px-4 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white">
+          <i class="fa-solid fa-list-check mr-1"></i> Transaksi
+        </button>
+        <button onclick="switchTab('assets')" id="tab-assets" class="flex-1 md:flex-initial px-4 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white">
+          <i class="fa-solid fa-landmark mr-1"></i> Aset & Hutang
+        </button>
+      </nav>
+    </header>
+
+    <!-- SECTION 1: DASHBOARD -->
+    <main id="sec-dashboard" class="space-y-6">
+      
+      <!-- Top Summary Cards -->
+      <div class="bg-gradient-to-r from-blue-900/40 via-indigo-900/40 to-slate-800 border border-blue-700/50 p-6 rounded-2xl shadow-lg">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <p class="text-slate-300 text-xs font-semibold uppercase tracking-wider">Total Kekayaan Bersih (Net Worth)</p>
+            <h2 id="net-worth-val" class="text-3xl md:text-4xl font-extrabold text-white mt-1">Rp 0</h2>
+            <p class="text-xs text-blue-300/80 mt-1">
+              (Total Saldo Kas + Total Aset + Total Piutang) - Total Hutang
+            </p>
+          </div>
+          <div class="flex gap-2 text-xs">
+            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 text-center">
+              <span class="text-slate-400 block">Savings Rate</span>
+              <span id="savings-rate-val" class="text-base font-bold text-emerald-400">0%</span>
+            </div>
+            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 text-center">
+              <span class="text-slate-400 block">Beban Hutang</span>
+              <span id="debt-ratio-val" class="text-base font-bold text-blue-400">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overview Cards Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+          <p class="text-slate-400 text-xs font-medium">Total Pemasukan</p>
+          <p id="total-income-val" class="text-lg md:text-xl font-bold text-emerald-400 mt-1">Rp 0</p>
+        </div>
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+          <p class="text-slate-400 text-xs font-medium">Total Pengeluaran</p>
+          <p id="total-expense-val" class="text-lg md:text-xl font-bold text-rose-400 mt-1">Rp 0</p>
+        </div>
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+          <p class="text-slate-400 text-xs font-medium">Total Aset</p>
+          <p id="total-assets-val" class="text-lg md:text-xl font-bold text-blue-400 mt-1">Rp 0</p>
+        </div>
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+          <p class="text-slate-400 text-xs font-medium">Total Hutang</p>
+          <p id="total-debts-val" class="text-lg md:text-xl font-bold text-amber-400 mt-1">Rp 0</p>
+        </div>
+      </div>
+
+      <!-- Charts Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+          <h3 class="font-semibold text-slate-200 text-sm mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-blue-400"></i> Arus Kas Bulanan
+          </h3>
+          <div class="h-60 relative">
+            <canvas id="cashflowChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+          <h3 class="font-semibold text-slate-200 text-sm mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-rose-400"></i> Pengeluaran per Kategori
+          </h3>
+          <div class="h-60 relative">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- SECTION 2: TRANSAKSI (AUTOMATED & MANUAL) -->
+    <main id="sec-transactions" class="space-y-6 hidden">
+      
+      <!-- Input Panel (Smart AI & Form) -->
+      <div class="bg-slate-800 p-5 md:p-6 rounded-2xl border border-slate-700 space-y-4">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 border-b border-slate-700">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Input Transaksi Otomatis / Manual
+            </h2>
+            <p class="text-xs text-slate-400">Gunakan suara, upload foto struk, atau isi form di bawah</p>
+          </div>
+
+          <!-- AI Trigger Actions -->
+          <div class="flex gap-2 w-full md:w-auto">
+            <!-- Voice Input Button -->
+            <button id="btn-voice" onclick="simulateVoiceInput()" class="flex-1 md:flex-initial bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all">
+              <i class="fa-solid fa-microphone text-sm"></i>
+              <span id="voice-txt">Input Suara</span>
+            </button>
+
+            <!-- Receipt Photo Button -->
+            <label class="flex-1 md:flex-initial bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all">
+              <i class="fa-solid fa-camera text-sm"></i> Foto Struk
+              <input type="file" accept="image/*" class="hidden" onchange="simulateReceiptOCR(event)">
+            </label>
+          </div>
+        </div>
+
+        <!-- AI Banner Alert -->
+        <div id="ai-status" class="hidden bg-blue-900/50 border border-blue-500/50 p-3 rounded-xl text-xs text-blue-200 flex items-center gap-2">
+          <i class="fa-solid fa-spinner fa-spin text-blue-400"></i>
+          <span id="ai-status-msg">Memproses data dengan AI...</span>
+        </div>
+
+        <!-- Transaction Form -->
+        <form onsubmit="handleAddTransaction(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <div class="col-span-1 md:col-span-2 flex gap-2">
+            <button type="button" id="btn-type-expense" onclick="setTxType('expense')" class="flex-1 py-2 rounded-lg font-semibold text-xs border bg-rose-500/20 border-rose-500 text-rose-300">
+              Pengeluaran
+            </button>
+            <button type="button" id="btn-type-income" onclick="setTxType('income')" class="flex-1 py-2 rounded-lg font-semibold text-xs border bg-slate-900 border-slate-700 text-slate-400">
+              Pemasukan
+            </button>
+          </div>
+
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Nominal (Rp)</label>
+            <input type="number" id="tx-amount" required placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          </div>
+
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Kategori</label>
+            <select id="tx-category" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+              <option value="Makanan & Minuman">Makanan & Minuman</option>
+              <option value="Belanja">Belanja</option>
+              <option value="Transportasi">Transportasi</option>
+              <option value="Tagihan & Utilitas">Tagihan & Utilitas</option>
+              <option value="Hiburan">Hiburan</option>
+              <option value="Gaji">Gaji</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Akun / Dompet</label>
+            <select id="tx-wallet" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+              <option value="BCA">Bank BCA</option>
+              <option value="Mandiri">Bank Mandiri</option>
+              <option value="OVO">OVO</option>
+              <option value="Gopay">Gopay</option>
+              <option value="Cash">Cash / Tunai</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Tanggal</label>
+            <input type="date" id="tx-date" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          </div>
+
+          <div class="col-span-1 md:col-span-2">
+            <label class="block text-xs text-slate-400 mb-1">Deskripsi / Catatan</label>
+            <input type="text" id="tx-desc" placeholder="Contoh: Beli makan siang / Kopi" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          </div>
+
+          <button type="submit" class="col-span-1 md:col-span-2 bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg text-sm transition-all">
+            + Simpan Transaksi
+          </button>
+        </form>
+      </div>
+
+      <!-- Transaction History Table -->
+      <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4">
+        <h3 class="font-bold text-slate-200 text-base">Riwayat Transaksi</h3>
+        <div id="tx-list" class="space-y-2">
+          <!-- Transaksi akan dirender otomatis via JavaScript -->
+        </div>
+      </div>
+    </main>
+
+    <!-- SECTION 3: ASET & HUTANG -->
+    <main id="sec-assets" class="space-y-6 hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Asset Management -->
+        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4">
+          <h3 class="font-bold text-slate-200 text-base flex items-center gap-2">
+            <i class="fa-solid fa-landmark text-emerald-400"></i> Daftar Aset & Investasi
+          </h3>
+
+          <form onsubmit="handleAddAsset(event)" class="space-y-3 bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
+            <input type="text" id="ast-name" placeholder="Nama Aset (Emas, Saham, Properti)" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+            <input type="number" id="ast-val" placeholder="Nilai Taksiran (Rp)" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 rounded-lg text-xs font-semibold">
+              + Tambah Aset
+            </button>
+          </form>
+
+          <div id="assets-list" class="space-y-2">
+            <!-- Asset Items Rendered Here -->
+          </div>
+        </div>
+
+        <!-- Debts Management -->
+        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4">
+          <h3 class="font-bold text-slate-200 text-base flex items-center gap-2">
+            <i class="fa-solid fa-hand-holding-dollar text-amber-400"></i> Hutang & Piutang
+          </h3>
+
+          <form onsubmit="handleAddDebt(event)" class="space-y-3 bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
+            <select id="dbt-type" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+              <option value="debt">Hutang (Kamu Pinjam Uang)</option>
+              <option value="receivable">Piutang (Orang Pinjam Uangmu)</option>
+            </select>
+            <input type="text" id="dbt-person" placeholder="Pihak Terkait (Nama/Bank)" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+            <input type="number" id="dbt-amount" placeholder="Jumlah Nominal (Rp)" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-1.5 rounded-lg text-xs font-semibold">
+              + Catat Hutang/Piutang
+            </button>
+          </form>
+
+          <div id="debts-list" class="space-y-2">
+            <!-- Debt Items Rendered Here -->
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    // State Database Lokal (Simulasi)
+    let state = {
+      transactions: [
+        { id: 1, type: 'expense', amount: 35000, category: 'Makanan & Minuman', wallet: 'BCA', desc: 'Makan Siang Nasi Padang', date: '2026-10-14', method: 'voice' },
+        { id: 2, type: 'expense', amount: 120000, category: 'Belanja', wallet: 'OVO', desc: 'Struk Indomaret', date: '2026-10-13', method: 'ocr' },
+        { id: 3, type: 'income', amount: 8000000, category: 'Gaji', wallet: 'BCA', desc: 'Gaji Bulanan', date: '2026-10-01', method: 'manual' }
+      ],
+      assets: [
+        { id: 1, name: 'Emas Antam (10 gr)', value: 15000000 },
+        { id: 2, name: 'Saham BBCA', value: 20000000 }
+      ],
+      debts: [
+        { id: 1, type: 'receivable', person: 'Budi (Teman)', amount: 300000, settled: false },
+        { id: 2, type: 'debt', person: 'Cicilan KPR Bank', amount: 5000000, settled: false }
+      ],
+      currentFormType: 'expense'
+    };
+
+    let cashflowChartInstance = null;
+    let categoryChartInstance = null;
+
+    // Helper Format Currency
+    function formatRp(num) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+    }
+
+    // Init Page
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
+      renderAll();
+    });
+
+    // Navigation Switcher
+    function switchTab(tab) {
+      ['dashboard', 'transactions', 'assets'].forEach(t => {
+        document.getElementById(`sec-${t}`).classList.add('hidden');
+        document.getElementById(`tab-${t}`).className = "flex-1 md:flex-initial px-4 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white";
+      });
+
+      document.getElementById(`sec-${tab}`).classList.remove('hidden');
+      document.getElementById(`tab-${tab}`).className = "flex-1 md:flex-initial px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 text-white";
+
+      if (tab === 'dashboard') {
+        renderCharts();
+      }
+    }
+
+    // Toggle Form Expense/Income
+    function setTxType(type) {
+      state.currentFormType = type;
+      const btnExp = document.getElementById('btn-type-expense');
+      const btnInc = document.getElementById('btn-type-income');
+
+      if (type === 'expense') {
+        btnExp.className = "flex-1 py-2 rounded-lg font-semibold text-xs border bg-rose-500/20 border-rose-500 text-rose-300";
+        btnInc.className = "flex-1 py-2 rounded-lg font-semibold text-xs border bg-slate-900 border-slate-700 text-slate-400";
+      } else {
+        btnInc.className = "flex-1 py-2 rounded-lg font-semibold text-xs border bg-emerald-500/20 border-emerald-500 text-emerald-300";
+        btnExp.className = "flex-1 py-2 rounded-lg font-semibold text-xs border bg-slate-900 border-slate-700 text-slate-400";
+      }
+    }
+
+    // Handle Add Transaction
+    function handleAddTransaction(e) {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('tx-amount').value);
+      const category = document.getElementById('tx-category').value;
+      const wallet = document.getElementById('tx-wallet').value;
+      const date = document.getElementById('tx-date').value;
+      const desc = document.getElementById('tx-desc').value || category;
+
+      state.transactions.unshift({
+        id: Date.now(),
+        type: state.currentFormType,
+        amount, category, wallet, date, desc,
+        method: 'manual'
+      });
+
+      document.getElementById('tx-amount').value = '';
+      document.getElementById('tx-desc').value = '';
+      renderAll();
+    }
+
+    // Handle Add Asset
+    function handleAddAsset(e) {
+      e.preventDefault();
+      const name = document.getElementById('ast-name').value;
+      const value = parseFloat(document.getElementById('ast-val').value);
+
+      state.assets.push({ id: Date.now(), name, value });
+      document.getElementById('ast-name').value = '';
+      document.getElementById('ast-val').value = '';
+      renderAll();
+    }
+
+    // Handle Add Debt
+    function handleAddDebt(e) {
+      e.preventDefault();
+      const type = document.getElementById('dbt-type').value;
+      const person = document.getElementById('dbt-person').value;
+      const amount = parseFloat(document.getElementById('dbt-amount').value);
+
+      state.debts.push({ id: Date.now(), type, person, amount, settled: false });
+      document.getElementById('dbt-person').value = '';
+      document.getElementById('dbt-amount').value = '';
+      renderAll();
+    }
+
+    // Toggle Debt Status
+    function toggleDebtSettle(id) {
+      state.debts = state.debts.map(d => d.id === id ? { ...d, settled: !d.settled } : d);
+      renderAll();
+    }
+
+    // Simulate AI Voice Processing
+    function simulateVoiceInput() {
+      const statusBanner = document.getElementById('ai-status');
+      const statusMsg = document.getElementById('ai-status-msg');
+      statusBanner.classList.remove('hidden');
+      statusMsg.innerText = "Mendengarkan ucapan suara: 'Beli bensin 50 ribu pakai Mandiri'...";
+
+      setTimeout(() => {
+        statusMsg.innerText = "AI sedang mengekstrak informasi...";
+        setTimeout(() => {
+          setTxType('expense');
+          document.getElementById('tx-amount').value = 50000;
+          document.getElementById('tx-category').value = 'Transportasi';
+          document.getElementById('tx-wallet').value = 'Mandiri';
+          document.getElementById('tx-desc').value = 'Beli bensin pertamax';
+          statusBanner.classList.add('hidden');
+          alert("✨ AI berhasil mengisi data dari suara kamu!");
+        }, 1000);
+      }, 1500);
+    }
+
+    // Simulate AI Receipt OCR Processing
+    function simulateReceiptOCR(e) {
+      if (!e.target.files[0]) return;
+      const statusBanner = document.getElementById('ai-status');
+      const statusMsg = document.getElementById('ai-status-msg');
+      statusBanner.classList.remove('hidden');
+      statusMsg.innerText = "Menganalisis foto struk dengan Gemini Vision API...";
+
+      setTimeout(() => {
+        setTxType('expense');
+        document.getElementById('tx-amount').value = 87500;
+        document.getElementById('tx-category').value = 'Belanja';
+        document.getElementById('tx-wallet').value = 'BCA';
+        document.getElementById('tx-desc').value = 'Struk Belanja Minimarket';
+        statusBanner.classList.add('hidden');
+        alert("📸 AI berhasil membaca total nominal dan item dari struk!");
+      }, 2000);
+    }
+
+    // Render Function
+    function renderAll() {
+      // Calculate Totals
+      const totalIncome = state.transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const totalExpense = state.transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      const totalCashBalance = totalIncome - totalExpense;
+
+      const totalAssets = state.assets.reduce((s, a) => s + a.value, 0);
+      const totalReceivables = state.debts.filter(d => d.type === 'receivable' && !d.settled).reduce((s, d) => s + d.amount, 0);
+      const totalDebts = state.debts.filter(d => d.type === 'debt' && !d.settled).reduce((s, d) => s + d.amount, 0);
+
+      const netWorth = (totalCashBalance + totalAssets + totalReceivables) - totalDebts;
+      const savingsRate = totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0;
+      const debtRatio = totalIncome > 0 ? Math.round((totalDebts / totalIncome) * 100) : 0;
+
+      // Update Header Cards
+      document.getElementById('net-worth-val').innerText = formatRp(netWorth);
+      document.getElementById('total-income-val').innerText = formatRp(totalIncome);
+      document.getElementById('total-expense-val').innerText = formatRp(totalExpense);
+      document.getElementById('total-assets-val').innerText = formatRp(totalAssets);
+      document.getElementById('total-debts-val').innerText = formatRp(totalDebts);
+      document.getElementById('savings-rate-val').innerText = `${savingsRate}%`;
+      document.getElementById('debt-ratio-val').innerText = `${debtRatio}%`;
+
+      // Render Transaction List
+      const txContainer = document.getElementById('tx-list');
+      txContainer.innerHTML = state.transactions.map(t => `
+        <div class="flex items-center justify-between p-3 bg-slate-900/60 rounded-xl border border-slate-700/50">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 rounded-lg ${t.type === 'income' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
+              <i class="fa-solid ${t.type === 'income' ? 'fa-arrow-down-left' : 'fa-arrow-up-right'}"></i>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-200 text-xs md:text-sm">${t.desc}</p>
+              <div class="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                <span>${t.category}</span> • <span>${t.wallet}</span> • <span>${t.date}</span>
+                ${t.method === 'voice' ? '<span class="bg-blue-500/20 text-blue-300 px-1 rounded">Suara</span>' : ''}
+                ${t.method === 'ocr' ? '<span class="bg-amber-500/20 text-amber-300 px-1 rounded">Struk</span>' : ''}
+              </div>
+            </div>
+          </div>
+          <span class="font-bold text-xs md:text-sm ${t.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}">
+            ${t.type === 'income' ? '+' : '-'}${formatRp(t.amount)}
+          </span>
+        </div>
+      `).join('');
+
+      // Render Assets
+      document.getElementById('assets-list').innerHTML = state.assets.map(a => `
+        <div class="flex justify-between items-center p-3 bg-slate-900/60 rounded-xl border border-slate-700/50">
+          <span class="text-xs text-slate-200 font-medium">${a.name}</span>
+          <span class="text-xs font-bold text-emerald-400">${formatRp(a.value)}</span>
+        </div>
+      `).join('');
+
+      // Render Debts
+      document.getElementById('debts-list').innerHTML = state.debts.map(d => `
+        <div class="flex justify-between items-center p-3 bg-slate-900/60 rounded-xl border border-slate-700/50 ${d.settled ? 'opacity-40' : ''}">
+          <div>
+            <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold ${d.type === 'debt' ? 'bg-rose-500/20 text-rose-300' : 'bg-blue-500/20 text-blue-300'}">
+              ${d.type === 'debt' ? 'Hutang' : 'Piutang'}
+            </span>
+            <p class="text-xs font-semibold text-slate-200 mt-1">${d.person}</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-bold ${d.type === 'debt' ? 'text-rose-400' : 'text-blue-400'}">${formatRp(d.amount)}</span>
+            <button onclick="toggleDebtSettle(${d.id})" class="text-slate-400 hover:text-emerald-400">
+              <i class="fa-solid ${d.settled ? 'fa-circle-check text-emerald-400' : 'fa-circle'} text-base"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      renderCharts();
+    }
+
+    // Render Charts (Chart.js)
+    function renderCharts() {
+      const ctxCash = document.getElementById('cashflowChart').getContext('2d');
+      const ctxCat = document.getElementById('categoryChart').getContext('2d');
+
+      if (cashflowChartInstance) cashflowChartInstance.destroy();
+      if (categoryChartInstance) categoryChartInstance.destroy();
+
+      // Cashflow Chart
+      cashflowChartInstance = new Chart(ctxCash, {
+        type: 'bar',
+        data: {
+          labels: ['Agu', 'Sep', 'Okt'],
+          datasets: [
+            { label: 'Pemasukan', data: [6000000, 6500000, 8000000], backgroundColor: '#10b981' },
+            { label: 'Pengeluaran', data: [3200000, 3800000, 2155000], backgroundColor: '#f43f5e' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+          }
+        }
+      });
+
+      // Category Chart
+      const categories = {};
+      state.transactions.filter(t => t.type === 'expense').forEach(t => {
+        categories[t.category] = (categories[t.category] || 0) + t.amount;
+      });
+
+      categoryChartInstance = new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(categories),
+          datasets: [{
+            data: Object.values(categories),
+            backgroundColor: ['#f43f5e', '#ec4899', '#a855f7', '#3b82f6', '#eab308']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } } }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
